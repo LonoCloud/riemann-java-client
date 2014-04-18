@@ -4,11 +4,13 @@ import com.aphyr.riemann.Proto;
 import com.aphyr.riemann.client.RiemannClient;
 import com.aphyr.riemann.client.ServerError;
 import com.aphyr.riemann.client.SimpleUdpTransport;
+import riemann.java.client.tests.Server;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import static org.junit.Assert.assertEquals;
@@ -17,11 +19,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class SimpleUdpClientTest {
+
   @Test
   public void sendEventsTest() throws IOException, InterruptedException, ServerError {
-    final DatagramSocket serverSocket = new DatagramSocket();
+      final InetSocketAddress addr = Server.getAddr();
+      final DatagramSocket serverSocket = new DatagramSocket(addr);
     try {
-      final RiemannClient client = new RiemannClient(new SimpleUdpTransport(serverSocket.getLocalPort()));
+      final RiemannClient client = new RiemannClient(new SimpleUdpTransport(addr));
       try {
         client.connect();
         sendTestMessages(serverSocket, client);
@@ -35,10 +39,10 @@ public class SimpleUdpClientTest {
 
   @Test
   public void sendEventsOverReconnectionTest() throws IOException, InterruptedException, ServerError {
-    DatagramSocket serverSocket = new DatagramSocket();
-    final int port = serverSocket.getLocalPort();
+      final InetSocketAddress addr = Server.getAddr();
+    DatagramSocket serverSocket = new DatagramSocket(addr);
     try {
-      final RiemannClient client = new RiemannClient(new SimpleUdpTransport(serverSocket.getLocalPort()));
+      final RiemannClient client = new RiemannClient(new SimpleUdpTransport(addr));
       try {
         client.connect();
         assertTrue(client.isConnected());
@@ -52,7 +56,7 @@ public class SimpleUdpClientTest {
         client.sendEvents(e);
 
         // Reopen listening socket
-        serverSocket = new DatagramSocket(new InetSocketAddress(port));
+        serverSocket = new DatagramSocket(addr);
 
         // Expect sent messages to be received again
         sendTestMessages(serverSocket, client);

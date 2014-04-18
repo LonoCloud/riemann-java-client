@@ -14,24 +14,41 @@ import com.aphyr.riemann.Proto.Event;
 import com.aphyr.riemann.Proto.Msg;
 
 public abstract class Server {
+    public static InetSocketAddress getAddr() {
+      final InetAddress loopback = InetAddress.getLoopbackAddress();
+      int port = 55433;
+      if (System.getProperty("RIEMANN_TEST_PORT") != null) {
+          port = Integer.parseInt(System.getProperty("RIEMANN_TEST_PORT"));
+      }
+      return new InetSocketAddress(loopback, port);
+    }
+
 	public int port;
 	public Thread thread;
   public ServerSocket serverSocket;
   public LinkedBlockingQueue<Msg> received = new LinkedBlockingQueue<Msg>();
 
 	public InetSocketAddress start() throws IOException {
-		this.port = 9800 + new Random().nextInt(100);
-    this.serverSocket = new ServerSocket(this.port);
-		this.thread = mainThread(this.serverSocket);
-		this.thread.start();
+            final InetSocketAddress addr = getAddr();
+            this.port = addr.getPort();
+            this.serverSocket = new ServerSocket();
+            this.serverSocket.setReuseAddress(true);
+            this.serverSocket.bind(addr);
+            this.thread = mainThread(this.serverSocket);
+            this.thread.start();
 
-    return new InetSocketAddress(InetAddress.getLocalHost(), this.port);
+            return addr;
 	}
 
 	public void stop() {
     if (this.thread != null) {
-      this.thread.interrupt();
+        this.thread.interrupt();
       this.thread = null;
+    }
+    try {
+        this.serverSocket.close();
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 		this.port = -1;
 		this.serverSocket = null;
