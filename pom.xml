@@ -65,6 +65,15 @@
   </dependencies>
 
   <build>
+
+    <extensions>
+      <extension>
+        <groupId>org.springframework.build.aws</groupId>
+        <artifactId>org.springframework.build.aws.maven</artifactId>
+        <version>3.0.0.RELEASE</version>
+      </extension>
+    </extensions>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -150,9 +159,12 @@
 
   <distributionManagement>
     <repository>
-      <id>clojars.org</id>
-      <name>Clojars</name>
-      <url>https://clojars.org/repo</url>
+      <id>lonocloud-maven.releases</id>
+      <url>s3://lonocloud-maven/repo/releases/</url>
     </repository>
+    <snapshotRepository>
+      <id>lonocloud-maven.snapshots</id>
+      <url>s3://lonocloud-maven/repo/snapshots/</url>
+    </snapshotRepository>
   </distributionManagement>
 </project>
